@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Designer</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="tinymce/js/tinymce/tinymce.dev.js"></script>
+
+</head>
+<body>
+    <h1>Report Designer</h1>
+
+    <textarea id="designer">
+
+    </textarea>
+
+    <script>
+        $(document).ready(function(){
+            tinymce.init({
+                selector: '#designer',
+
+                height : 500,
+                content_style: "html, body {height: 100%;}",
+
+                plugins: "visualblocks cb_absolute_div",
+                menubar: "view",
+                toolbar: "undo redo | styleselect | bold italic | link image | visualblocks | cb_absolute_div"
+            });
+        });
+    </script>
+
+</body>
+</html>

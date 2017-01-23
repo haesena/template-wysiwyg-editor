@@ -1,0 +1,9 @@
+.cb_absolute_div {
+	border: 1px dashed #BBB;;
+}
+
+.mce-cd-absdiv {
+	cursor: crosshair;
+}
+
+.mce-i-cb_absolute_div:before{content:"\e02e"}
