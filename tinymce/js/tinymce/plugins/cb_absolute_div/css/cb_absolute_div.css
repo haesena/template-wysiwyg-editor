@@ -1,5 +1,23 @@
 .cb_absolute_div {
-	border: 1px dashed #BBB;;
+	border: 1px dashed #BBB;
+}
+
+.cb_absolute_div_resize {
+	border: 1px solid #BBB;
+	position: absolute;
+	height: 6px;
+	width: 6px;
+	background-color: white;
+	cursor: nwse-resize;
+}
+
+.cb_absolute_div_move {
+	border: 1px solid #BBB;
+	position: absolute;
+	height: 6px;
+	width: 6px;
+	background-color: white;
+	cursor: move;
 }
 
 .mce-cd-absdiv {
