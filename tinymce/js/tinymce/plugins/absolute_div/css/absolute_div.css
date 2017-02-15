@@ -1,19 +1,24 @@
-.cb_absolute_div {
+
+.absolute_div {
 	border: 1px dashed #BBB;
 }
 
-.cb_absolute_div_resize {
+.absolute_div_resize {
 	border: 1px solid #BBB;
 	position: absolute;
+	bottom: -3px;
+	right: -3px;
 	height: 6px;
 	width: 6px;
 	background-color: white;
 	cursor: nwse-resize;
 }
 
-.cb_absolute_div_move {
+.absolute_div_move {
 	border: 1px solid #BBB;
 	position: absolute;
+	top: -3px;
+	left: -3px;
 	height: 6px;
 	width: 6px;
 	background-color: white;
@@ -24,4 +29,4 @@
 	cursor: crosshair;
 }
 
-.mce-i-cb_absolute_div:before{content:"\e02e"}
+.mce-i-absolute_div:before{content:"\e02e"}

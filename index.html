@@ -12,7 +12,9 @@
     <h1>Report Designer</h1>
 
     <textarea id="designer">
-
+<div class="page">
+<p>initial content</p>
+</div>
     </textarea>
 
     <script>
@@ -23,9 +25,10 @@
                 height : 500,
                 content_style: "html, body {height: 100%;}",
 
-                plugins: "visualblocks cb_absolute_div",
-                menubar: "view",
-                toolbar: "undo redo | styleselect | bold italic | link image | visualblocks | cb_absolute_div"
+                plugins: "absolute_div page",
+                menubar: "view tools",
+                toolbar: "undo redo | styleselect | bold italic underline | absolute_div",
+
             });
         });
     </script>

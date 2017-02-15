@@ -10,11 +10,11 @@
 
 /*global tinymce:true */
 
-tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
+tinymce.PluginManager.add('absolute_div', function(editor, url) {
     var cssId;
     
     var initiated = false, dragging = false;
-    var start_x = 0, start_y = 0, end_x = 0, end_y = 0;
+    var start_x = 0, start_y = 0, end_x = 0, end_y = 0, offset_top = 0, offset_left = 0;
     var target = null;
 
     // Temporary div which is shown while dragging (at insertion and resizing)
@@ -39,7 +39,7 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
 
         self.active(initiated);
 
-        editor.on('cInsertAbsDiv', function() {
+        editor.on('insertAbsDiv', function() {
             self.active(initiated);
             editor.dom.toggleClass(editor.getBody(), 'mce-cd-absdiv');
         });
@@ -48,7 +48,6 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
     function setSelectedDiv(node) {
 
         if(selectedAbsDiv != null) {
-            editor.dom.removeClass(selectedAbsDiv, 'cb_selected');
             editor.dom.remove(rDiv);
             editor.dom.remove(mDiv);
 
@@ -62,7 +61,6 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
         }
 
         selectedAbsDiv = node.id;
-        editor.dom.addClass(selectedAbsDiv, 'cb_selected');
 
         var rx = divs[selectedAbsDiv].end.x - 3;
         var ry = divs[selectedAbsDiv].end.y - 3;
@@ -71,32 +69,33 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
         var my = divs[selectedAbsDiv].start.y - 3;
 
         var rOptions = {
-            class: 'cb_absolute_div_resize',
-            style: 'top: ' + ry + 'px; left: ' + rx + 'px;'
+            class: 'absolute_div_resize',
+            // style: 'top: ' + ry + 'px; left: ' + rx + 'px;'
         };
 
         var mOptions = {
-            class: 'cb_absolute_div_move',
-            style: 'top: ' + my + 'px; left: ' + mx + 'px;'
+            class: 'absolute_div_move',
+            // style: 'top: ' + my + 'px; left: ' + mx + 'px;'
         };
 
-        rDiv = editor.dom.add(tinymce.activeEditor.getBody(), 'div', rOptions, '', false);
-        mDiv = editor.dom.add(tinymce.activeEditor.getBody(), 'div', mOptions, '', false);
+        rDiv = editor.dom.add(node.id, 'div', rOptions, '', false);
+        mDiv = editor.dom.add(node.id, 'div', mOptions, '', false);
 
     }
 
     // add the button to the editor
-    editor.addButton('cb_absolute_div', {
+    editor.addButton('absolute_div', {
         title: 'Insert Block',
-        cmd: 'cbAbsoluteDiv',
+        cmd: 'absoluteDiv',
         image: url+'/textblock.png',
         onPostRender: toggleActiveState
     });
 
     // when the button is clicked, we toggle the initiaded-flag and update the state of the button
-    editor.addCommand('cbAbsoluteDiv', function() {
+    editor.addCommand('absoluteDiv', function() {
+        console.log("in cmd");
         initiated = !initiated;
-        editor.fire('cInsertAbsDiv');
+        editor.fire('insertAbsDiv');
     });
 
     // when the editor is initialized, we add the css, and the mouse listeners
@@ -108,10 +107,43 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
             linkElm = dom.create('link', {
                 id: cssId,
                 rel: 'stylesheet',
-                href: url + '/css/cb_absolute_div.css'
+                href: url + '/css/absolute_div.css'
             });
 
             editor.getDoc().getElementsByTagName('head')[0].appendChild(linkElm);
+        }
+
+        // select all divs with the absolute_div-class
+        var init_divs = dom.select("div.absolute_div");
+
+        // each initial div will be inserted in the divs-array for resizing and moving capabilities
+        for(var i = 0; i < init_divs.length; i++) {
+            var d = init_divs[i];
+
+            // retrieve id, generate new one if not set
+            var did = d.id;
+            if(did == null) {
+                did = dom.uniqueId();
+                d.id = did;
+            }
+
+            // parse the absolute position
+            var t = parseInt(d.style.top.replace("px", ""));
+            var l = parseInt(d.style.left.replace("px", ""));
+            var w = parseInt(d.style.width.replace("px", ""));
+            var h = parseInt(d.style.height.replace("px", ""));
+
+            divs[did] = {
+                div: did,
+                start: {
+                    x: l,
+                    y: t
+                },
+                end: {
+                    x: l+w,
+                    y: t+h
+                }
+            };
         }
 
 
@@ -119,17 +151,27 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
 
             // if the user clicked the "new div" button
             if(initiated) {
-                // save the position of the mousedown event
-                start_x = e.x;
-                start_y = e.y;
 
                 // save the target element of the mousedown event
                 target = e.target;
+
+                offset_left = target.offsetLeft;
+                offset_top = target.offsetTop;
+
+                console.log("target: "+target.id+", offset: "+offset_top+", "+offset_left);
+
+                // save the position of the mousedown event
+                start_x = e.x - offset_left;
+                start_y = e.y - offset_top;
+
+                console.log(target);
 
                 dragging = true;
 
             // if the user clicked on the resizing-div
             } else if(e.target == rDiv) {
+
+                console.log("resize-div clicked");
 
                 // activate the resizing mode
                 resizing = true;
@@ -137,6 +179,8 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
 
             // if the user clicked the moving-div
             } else if(e.target == mDiv) {
+
+                console.log("move-div clicked");
 
                 // activate the moving-mode
                 moving = true;
@@ -151,8 +195,8 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
             if(dragging == true) {
 
                 // position of the mouse
-                var m_x = e.x;
-                var m_y = e.y;
+                var m_x = e.x - offset_left;
+                var m_y = e.y - offset_top;
 
                 var h = m_y - start_y;
                 var w = m_x - start_x;
@@ -164,7 +208,7 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
                     var options = {
                         id: draggingDivId,
                         style: 'position: absolute; top: '+start_y+'px; left: '+start_x+'px; height: '+h+'px; width: '+w+'px;',
-                        class: 'cb_absolute_div'
+                        class: 'absolute_div'
                     };
 
                     editor.dom.add(target, 'div', options, '', false);
@@ -178,8 +222,8 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
                 var sx = divs[selectedAbsDiv].start.x;
                 var sy = divs[selectedAbsDiv].start.y;
 
-                var m_x = e.x;
-                var m_y = e.y;
+                var m_x = e.x - offset_left;
+                var m_y = e.y - offset_top;
 
                 var h = Math.abs(sy - m_y);
                 var w = Math.abs(sx - m_x);
@@ -187,31 +231,16 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
                 editor.dom.setStyle(selectedAbsDiv, 'height', h);
                 editor.dom.setStyle(selectedAbsDiv, 'width', w);
 
-                editor.dom.setStyle(rDiv, 'left', m_x - 3);
-                editor.dom.setStyle(rDiv, 'top', m_y - 3);
-
             } else if (moving == true) {
 
                 var osx = divs[selectedAbsDiv].start.x;
                 var osy = divs[selectedAbsDiv].start.y;
 
-                var ex = divs[selectedAbsDiv].end.x;
-                var ey = divs[selectedAbsDiv].end.y;
-
-                var m_x = e.x;
-                var m_y = e.y;
-
-                var diff_x = osx - m_x;
-                var diff_y = osy - m_y;
+                var m_x = e.x - offset_left;
+                var m_y = e.y - offset_top;
 
                 editor.dom.setStyle(selectedAbsDiv, 'top', m_y);
                 editor.dom.setStyle(selectedAbsDiv, 'left', m_x);
-
-                editor.dom.setStyle(mDiv, 'left', m_x - 3);
-                editor.dom.setStyle(mDiv, 'top', m_y - 3);
-
-                editor.dom.setStyle(rDiv, 'left', ex - diff_x - 3);
-                editor.dom.setStyle(rDiv, 'top', ey - diff_y - 3);
 
             }
         });
@@ -221,8 +250,8 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
             // if the user was creating a new absolute div, insert it now
             if(dragging == true) {
 
-                end_x = e.x;
-                end_y = e.y;
+                end_x = e.x - offset_left;
+                end_y = e.y - offset_top;
 
                 initiated = false;
                 dragging = false;
@@ -237,7 +266,7 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
 
                 var options = {
                     id: newId,
-                    class: 'cb_absolute_div',
+                    class: 'absolute_div',
                     style: 'position: absolute; top: ' + start_y + 'px; left: ' + start_x + 'px; height: ' + h + 'px; width: ' + w + 'px;'
                 };
 
@@ -261,12 +290,12 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
 
                 setSelectedDiv(newDiv);
 
-                editor.fire('cInsertAbsDiv');
+                editor.fire('insertAbsDiv');
 
             } else if (resizing == true) {
 
-                divs[selectedAbsDiv].end.x = e.x;
-                divs[selectedAbsDiv].end.y = e.y;
+                divs[selectedAbsDiv].end.x = e.x - offset_left;
+                divs[selectedAbsDiv].end.y = e.y - offset_top;
 
                 resizing = false;
 
@@ -277,11 +306,11 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
                 var oex = divs[selectedAbsDiv].end.x;
                 var oey = divs[selectedAbsDiv].end.y;
 
-                var diff_x = osx - e.x;
-                var diff_y = osy - e.y;
+                var diff_x = osx - e.x - offset_left;
+                var diff_y = osy - e.y - offset_top;
 
-                divs[selectedAbsDiv].start.x = e.x;
-                divs[selectedAbsDiv].start.y = e.y;
+                divs[selectedAbsDiv].start.x = e.x - offset_left;
+                divs[selectedAbsDiv].start.y = e.y - offset_top;
 
                 divs[selectedAbsDiv].end.x = oex - diff_x;
                 divs[selectedAbsDiv].end.y = oey - diff_y;
@@ -293,13 +322,13 @@ tinymce.PluginManager.add('cb_absolute_div', function(editor, url) {
                 var node = editor.selection.getNode();
 
                 // if we clicked on an absolute div
-                if(editor.dom.hasClass(node.id, 'cb_absolute_div')) {
+                if(editor.dom.hasClass(node.id, 'absolute_div')) {
                     setSelectedDiv(node);
                 } else {
 
                     // check if we clicked on an element that is inside an absolute div
                     var nodes = editor.dom.getParents(node, function(n) {
-                        if(editor.dom.hasClass(n, 'cb_absolute_div'))
+                        if(editor.dom.hasClass(n, 'absolute_div'))
                             return true;
                         return false;
                     });
